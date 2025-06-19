@@ -24,3 +24,8 @@ const hookClick = (e) => {
 }
 
 document.addEventListener('click', hookClick, { capture: true })
+
+(function() {
+    'use strict';
+    setInterval(()=>{document.getElementById("root").click();},30000); // 30秒点击一次
+})();
