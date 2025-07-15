@@ -23,9 +23,56 @@ const hookClick = (e) => {
     }
 }
 
-document.addEventListener('click', hookClick, { capture: true })
+// =============== Anti-Idle for Douyin Live ===============
+(function antiIdleForDouyinLive() {
+    console.log('[PakePlus] 抖音直播防暂停功能已启用')
 
-(function() {
-    'use strict';
-    setInterval(()=>{document.getElementById("root").click();},30000); // 30秒点击一次
+    const simulateActivity = () => {
+        const body = document.body
+        if (!body) return
+
+        const mouseMove = new MouseEvent("mousemove", { bubbles: true, cancelable: true });
+        body.dispatchEvent(mouseMove);
+
+        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+        body.dispatchEvent(click);
+
+        const keydown = new KeyboardEvent("keydown", { key: "Shift", bubbles: true });
+        document.dispatchEvent(keydown);
+    };
+
+    setInterval(simulateActivity, 60 * 1000); // 每60秒触发一次
+})();
+
+// =============== Auto-Set Quality to "原画" ===============
+(function autoSetQualityToOriginal() {
+    console.log('[PakePlus] 抖音直播自动切换画质功能已启用')
+
+    const trySetQuality = () => {
+        // 寻找可能的画质按钮或列表项
+        const buttons = document.querySelectorAll('button, div, li, span');
+
+        for (const btn of buttons) {
+            if (btn && btn.innerText && btn.innerText.includes('原画')) {
+                console.log('[PakePlus] 发现原画按钮，尝试点击', btn);
+                btn.click();
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    // 定时多次尝试（防止页面晚加载或路由变化）
+    let attemptCount = 0;
+    const maxAttempts = 30;
+    const interval = setInterval(() => {
+        const success = trySetQuality();
+        attemptCount++;
+
+        if (success || attemptCount >= maxAttempts) {
+            clearInterval(interval);
+            console.log('[PakePlus] 停止自动切换画质扫描');
+        }
+    }, 2000);
 })();
