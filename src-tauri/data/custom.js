@@ -22,57 +22,42 @@ const hookClick = (e) => {
         console.log('not handle origin', origin)
     }
 }
+document.addEventListener('click', hookClick, true)
 
-// =============== Anti-Idle for Douyin Live ===============
-(function antiIdleForDouyinLive() {
-    console.log('[PakePlus] 抖音直播防暂停功能已启用')
-
-    const simulateActivity = () => {
-        const body = document.body
-        if (!body) return
-
-        const mouseMove = new MouseEvent("mousemove", { bubbles: true, cancelable: true });
-        body.dispatchEvent(mouseMove);
-
-        const click = new MouseEvent("click", { bubbles: true, cancelable: true });
-        body.dispatchEvent(click);
-
-        const keydown = new KeyboardEvent("keydown", { key: "Shift", bubbles: true });
-        document.dispatchEvent(keydown);
-    };
-
-    setInterval(simulateActivity, 60 * 1000); // 每60秒触发一次
-})();
-
-// =============== Auto-Set Quality to "原画" ===============
-(function autoSetQualityToOriginal() {
-    console.log('[PakePlus] 抖音直播自动切换画质功能已启用')
-
-    const trySetQuality = () => {
-        // 寻找可能的画质按钮或列表项
-        const buttons = document.querySelectorAll('button, div, li, span');
-
-        for (const btn of buttons) {
-            if (btn && btn.innerText && btn.innerText.includes('原画')) {
-                console.log('[PakePlus] 发现原画按钮，尝试点击', btn);
-                btn.click();
-                return true;
-            }
+/**
+ * 功能1：监听并关闭【长时间无操作，已暂停播放】弹窗
+ */
+function autoClosePausePopup() {
+    const observer = new MutationObserver(() => {
+        const pauseModal = document.querySelector('.modal-content:has(.player_resume)')
+        if (pauseModal) {
+            console.log('检测到暂停播放弹窗，自动关闭')
+            const resumeBtn = pauseModal.querySelector('.player_resume')
+            if (resumeBtn) resumeBtn.click()
         }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+}
+autoClosePausePopup()
 
-        return false;
-    };
-
-    // 定时多次尝试（防止页面晚加载或路由变化）
-    let attemptCount = 0;
-    const maxAttempts = 30;
-    const interval = setInterval(() => {
-        const success = trySetQuality();
-        attemptCount++;
-
-        if (success || attemptCount >= maxAttempts) {
-            clearInterval(interval);
-            console.log('[PakePlus] 停止自动切换画质扫描');
+/**
+ * 功能2：进入直播间后自动切换清晰度为“原画”
+ */
+function setOriginalQuality() {
+    const observer = new MutationObserver(() => {
+        const qualityBtn = document.querySelector('.xgplayer-quality .name')
+        if (qualityBtn && qualityBtn.textContent !== '原画') {
+            console.log('尝试切换清晰度到 原画')
+            qualityBtn.click()
+            const options = document.querySelectorAll('.xgplayer-quality .xgplayer-list li')
+            options.forEach(li => {
+                if (li.textContent.includes('原画')) {
+                    li.click()
+                    console.log('已切换至 原画')
+                }
+            })
         }
-    }, 2000);
-})();
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+}
+setOriginalQuality()
